@@ -19,5 +19,10 @@ coverage/
 # TypeScriptin oma välimuistitiedosto (syntyy itsestään, ei kuulu repoon)
 *.tsbuildinfo
 
+# Next.jsin luoma tyyppitiedosto. Next kirjoittaa sen eri sisällöllä
+# riippuen siitä, ajetaanko "npm run dev" vai "npm run build", joten
+# repoon tallennettu versio olisi jatkuvasti väärä. Se syntyy itsestään.
+next-env.d.ts
+
 # Vercelin paikalliset asetukset
 .vercel
