@@ -206,3 +206,182 @@ käyttäjä ei näe. Sivulla on lista käyttäjistä: sähköposti, rooli ja lii
 Hän poistaa kaksi testitiliä. Sovellus varmistaa poiston ennen suorittamista, koska
 poistoa ei voi peruuttaa. Jos tavallinen käyttäjä kirjoittaa saman osoitteen
 selaimeensa, hän saa ilmoituksen, ettei hänellä ole oikeutta sivulle.
+
+## 7. Näkymät
+
+Sovelluksessa on kymmenen sivua. Jokainen sivu on oma osoitteensa, ja sivu rakennetaan
+palvelimella valmiiksi ennen lähettämistä selaimeen. Alla on jokaisesta sivusta
+sanallinen kuvaus ja yksinkertainen rautalankakuva eli karkea hahmotelma siitä, miten
+asiat sijoittuvat sivulla.
+
+### Julkiset sivut
+
+**Etusivu `/`** – kertoo yhdellä ruudulla, mitä sovellus tekee ja miksi se kannattaa.
+Sivulla on otsikko, kolmen kohdan selitys ("tallenna laitteesi", "haemme hinnat",
+"kertomme halvimman hetken"), nykyinen sähkön hinta nostona sekä kaksi painiketta.
+
+```
++--------------------------------------------------+
+|  Pörssisähköoptimoija          Hinnat  Kirjaudu  |
++--------------------------------------------------+
+|                                                  |
+|   Käynnistä laitteet silloin, kun sähkö on       |
+|   halvinta.                                      |
+|                                                  |
+|   [ Luo tunnus ]   [ Katso hinnat ]              |
+|                                                  |
+|   Hinta juuri nyt:  4,21 snt/kWh                 |
+|                                                  |
+|   1. Tallenna laitteesi                          |
+|   2. Haemme pörssihinnat automaattisesti         |
+|   3. Kerromme halvimman käynnistysajan           |
++--------------------------------------------------+
+```
+
+**Hintasivu `/prices`** – näyttää tämän päivän ja, jos saatavilla, huomisen hinnat
+pylväskaaviona tunti tunnilta. Halvin ja kallein tunti on korostettu. Kaavion alla on
+taulukko samoista luvuista, jotta tiedot ovat luettavissa myös ilman kaaviota. Sivun
+yläosassa kerrotaan, milloin hinnat on viimeksi haettu.
+
+```
++--------------------------------------------------+
+|  Sähkön hinta  [ Tänään ] [ Huomenna ]           |
+|  Päivitetty 15.11.2026 klo 18:05                 |
+|                                                  |
+|  snt/kWh                                         |
+|   12 |              ####                         |
+|    8 |         ##   ####  ##                     |
+|    4 |  ##  ## ##   ####  ##  ##                 |
+|    0 +--------------------------------           |
+|       00  03  06  09  12  15  18  21             |
+|                                                  |
+|  Halvin: klo 03  (1,8 snt)                       |
+|  Kallein: klo 18 (12,4 snt)                      |
+|  Keskihinta: 5,6 snt                             |
+|                                                  |
+|  Taulukko: klo | snt/kWh                         |
++--------------------------------------------------+
+```
+
+**Kirjautuminen `/login`** – sähköposti, salasana ja painike. Virheellisestä
+kirjautumisesta tulee selkeä ilmoitus, joka ei kerro kummassa kentässä oli virhe
+(tämä on tietoturvaratkaisu: muuten ulkopuolinen voisi päätellä, mitkä sähköpostit
+ovat käytössä). Alla linkki rekisteröitymiseen.
+
+**Rekisteröityminen `/register`** – sähköposti, salasana ja salasanan vahvistus.
+Salasanan vähimmäispituus kerrotaan kentän alla etukäteen, ei vasta virheilmoituksena.
+
+### Kirjautumisen vaativat sivut
+
+**Koontinäkymä `/dashboard`** – sovelluksen tärkein sivu. Lista käyttäjän laitteista, ja
+jokaisesta laitteesta kortti, jossa on laitteen nimi, suositeltu aloitusaika, kesto,
+käyttökerran hinta, säästö kalleimpaan verrattuna ja säästö keskihintaan verrattuna.
+Ylhäällä yhteenveto: yhteissäästö, jos kaikkia suosituksia noudattaa. Jos laitteita ei
+ole, sivulla on ohje ja painike ensimmäisen lisäämiseen.
+
+```
++--------------------------------------------------+
+|  Koontinäkymä   Laitteet  Asetukset  Kirjaudu ulos|
++--------------------------------------------------+
+|  Noudattamalla suosituksia säästät n. 1,24 €     |
+|                                 [ Lisää laite ]  |
+|  +--------------------+  +--------------------+  |
+|  | Pyykinpesukone     |  | Astianpesukone     |  |
+|  | 2 kW · 2 h         |  | 1,5 kW · 3 h       |  |
+|  |                    |  |                    |  |
+|  | Halvin: klo 03-05  |  | Halvin: klo 02-05  |  |
+|  | Hinta:  0,12 €     |  | Hinta:  0,14 €     |  |
+|  | Säästö: 0,55 €     |  | Säästö: 0,41 €     |  |
+|  +--------------------+  +--------------------+  |
++--------------------------------------------------+
+```
+
+**Laitelista `/devices`** – kaikki laitteet taulukkona: nimi, teho, kesto ja painikkeet
+muokkaamiseen ja poistamiseen. Poisto varmistetaan erikseen.
+
+**Uusi laite `/devices/new`** – lomake, jossa kolme kenttää: nimi, teho kilowatteina ja
+kesto tunteina. Kentän vieressä on esimerkki ("esim. 2 – pyykinpesukone on tyypillisesti
+1,5–2,5 kW"). Virheelliset arvot estetään sekä selaimessa että palvelimella.
+
+**Laitteen muokkaus `/devices/[id]`** – sama lomake täytettynä laitteen nykyisillä
+tiedoilla. Osoitteen `[id]` tilalla on laitteen tunniste. Palvelin tarkistaa aina, että
+laite kuuluu kirjautuneelle käyttäjälle; muuten sivu ei näytä mitään.
+
+**Asetukset `/settings`** – käyttäjän sähköposti, salasanan vaihto ja selvästi erotettu
+osio "Poista tili", jossa kerrotaan, että poisto poistaa myös kaikki laitteet eikä sitä
+voi peruuttaa.
+
+### Vain ylläpitäjälle
+
+**Ylläpito `/admin`** – taulukko kaikista käyttäjistä: sähköposti, rooli, liittymispäivä
+ja laitteiden määrä. Jokaisella rivillä poistopainike, joka varmistaa poiston. Sivun
+yläosassa lukumäärät: montako käyttäjää ja montako ylläpitäjää.
+
+### Virhesivut
+
+**404** – "Sivua ei löytynyt" ja linkki etusivulle. **500** – "Jotain meni vikaan,
+yritä hetken päästä uudelleen", ilman teknisiä yksityiskohtia.
+
+## 8. Aikataulu
+
+Työ tehdään kahtatoista vaihetta järjestyksessä 15.–20.11.2026. Jokainen vaihe on oma
+kokonaisuutensa, joka viedään versionhallintaan erillisenä haarana eli rinnakkaisena
+kehityslinjana, ja yhdistetään päälinjaan vasta kun se on valmis. Näin työn
+etenemisjärjestys näkyy historiasta selvästi.
+
+| Päivä | Vaihe | Mitä tehdään | Miksi tässä järjestyksessä |
+|---|---|---|---|
+| su 15.11 | 1 | Tämä suunnitteludokumentti | Ensin pitää tietää mitä rakennetaan |
+| su 15.11 | 2 | Projektin pohja: tyhjä mutta toimiva sovellus, tyylit ja ohjetiedosto | Pohja, jonka päälle kaikki muu tulee |
+| ma 16.11 | 3 | Automaattiset tarkistukset ja ensimmäinen julkaisu verkkoon | Julkaisu kuntoon heti, ettei se jää viimeiseksi riskiksi |
+| ma 16.11 | 4 | Tietokanta: taulut käyttäjille ja laitteille, ensimmäinen ylläpitäjä | Käyttäjiä ei voi tehdä ennen kuin on paikka, johon ne tallennetaan |
+| ti 17.11 | 5 | Rekisteröityminen, kirjautuminen ja uloskirjautuminen | Kurssin ydinvaatimus |
+| ti 17.11 | 6 | Roolit, sivujen suojaus, asetussivu ja tilin poisto | Käyttäjänhallinta valmiiksi ennen varsinaista sisältöä |
+| ke 18.11 | 7 | Hintojen haku, välimuisti ja hintasivu kaavioineen | Hinnat tarvitaan ennen kuin niillä voi laskea |
+| ke 18.11 | 8 | Laitteiden lisäys, muokkaus, poisto ja validointi | Laitteet tarvitaan ennen kuin niille voi laskea aikoja |
+| to 19.11 | 9 | Halvimman ajan laskenta, yksikkötestit ja koontinäkymä | Työn tärkein osa, tehdään kun kaikki palaset ovat valmiina |
+| to 19.11 | 10 | Ylläpitosivu: käyttäjälista ja poisto | Kurssin vaatimus, nopea toteuttaa valmiin pohjan päälle |
+| pe 20.11 | 11 | Viimeistely: puhelinnäkymä, virhesivut, ohjetiedosto | Kokonaisuuden siistiminen |
+| pe 20.11 | 12 | Loppuraportti | Kirjoitetaan vasta kun on mitä raportoida |
+
+Versionhallintaan viedään noin kaksi kertaa päivässä, ei kerralla. Työ jakautuu siis
+kahdentoista vaiheen ja noin kahdentoista julkaisun yli, jolloin historia näyttää
+aidon kehityskaaren.
+
+**Laskennan reunatapaukset**, jotka vaihe 9 hoitaa: huomisen hintoja ei ole vielä
+julkaistu, hinta on negatiivinen, hintadataa on vähemmän kuin laitteen käyttöaika
+vaatii, ja hinnat tulevat 15 minuutin jaksoissa tunnin sijaan.
+
+## 9. Riskit ja varautuminen
+
+| Riski | Kuinka todennäköinen | Mitä se aiheuttaisi | Miten varaudun |
+|---|---|---|---|
+| Hintarajapinta lakkaa toimimasta tai hidastuu | Keskinkertainen | Sovellus ei saisi hintoja eikä voisi laskea mitään | Hinnat tallennetaan välimuistiin, eli kopioksi, jota käytetään jos haku epäonnistuu. Käyttäjälle kerrotaan selkeästi, että luvut ovat viimeksi haetut. Varalle on toinen rajapinta (ENTSO-E) |
+| Aikataulu venyy, koska vaihe osoittautuu luultua työläämmäksi | Suuri | Kurssin pakolliset vaatimukset jäisivät kesken | Priorisointi on tehty valmiiksi osiossa 5: "Kiva lisä" -kohdat karsitaan ensin. Pakolliset vaatimukset tehdään vaiheissa 1–10, viimeistely vasta sen jälkeen |
+| Salasanat tai käyttäjätiedot vuotavat | Pieni mutta vakava | Vakava tietoturvaongelma ja kurssin hylkäys | Salasanoja ei tallenneta koskaan luettavassa muodossa, vain yksisuuntaisesti suojattuna. Salaisuudet pidetään erillisessä tiedostossa, jota ei vie versionhallintaan. Jokainen suojattu sivu tarkistetaan kahdesti: ennen sivun avaamista ja uudestaan palvelimella |
+| Käyttäjä näkee toisen käyttäjän laitteet | Pieni mutta vakava | Yksityisyyden menetys | Joka kerta kun laitetta luetaan tietokannasta, haku rajataan kirjautuneen käyttäjän tunnisteeseen. Tätä ei jätetä pelkän käyttöliittymän varaan |
+| Julkaisu verkkoon ei onnistu vasta lopussa | Keskinkertainen | Kurssin vaatimus "julkaistu sovellus" jäisi täyttymättä | Julkaisu tehdään heti vaiheessa 3, kun sovellus on vielä lähes tyhjä. Sen jälkeen jokainen vaihe julkaistaan automaattisesti |
+| Laskenta antaa väärän tuloksen reunatapauksessa | Keskinkertainen | Sovellus neuvoisi käyttäjää väärin, eli tekisi juuri päinvastoin kuin lupaa | Laskennalle kirjoitetaan yksikkötestit eli pienet automaattiset tarkistukset, jotka syöttävät tunnettuja hintasarjoja ja vertaavat tulosta käsin laskettuun oikeaan vastaukseen. Testataan erikseen negatiiviset hinnat ja liian lyhyt hintadata |
+| Tietokantapalvelu kaatuu tai ilmainen kiintiö loppuu | Pieni | Kirjautuminen ei toimisi | Käytetään palvelua, jonka ilmaistaso riittää kurssin kokoiselle työlle. Tietokannan rakenne on kuvattu tiedostoina, joten se voidaan luoda uudelleen toiseen palveluun |
+| Tietokoneen tai tilin menetys kesken projektin | Pieni | Työ katoaisi | Kaikki viedään GitHubiin noin kaksi kertaa päivässä, joten enintään puolen päivän työ voi kadota |
+
+## 10. Käytettävät välineet
+
+Jokaisesta välineestä yksi lause: mihin sitä käytetään.
+
+| Väline | Mihin sitä käytetään |
+|---|---|
+| **Next.js** | Sovelluskehys, joka rakentaa sivut valmiiksi palvelimella ja huolehtii siitä, että jokainen sivu on oma osoitteensa |
+| **TypeScript** | Ohjelmointikieli, joka tarkistaa jo kirjoitusvaiheessa, että tiedot ovat oikean tyyppisiä – esimerkiksi ettei tekstiä yritetä laskea yhteen |
+| **PostgreSQL (Neon)** | Tietokanta eli pysyvä paikka, jossa käyttäjät ja laitteet säilyvät; Neon on palvelu, joka tarjoaa tämän tietokannan verkossa |
+| **Prisma** | Työkalu, jolla tietokannan rakenne kuvataan yhdessä tiedostossa ja jolla tietoja luetaan ja kirjoitetaan ilman tietokantakieltä |
+| **Auth.js** | Valmis ratkaisu kirjautumiseen, joka hoitaa istunnon eli muistamisen siitä, kuka on kirjautuneena |
+| **bcrypt** | Menetelmä, joka muuntaa salasanan muotoon, josta alkuperäistä ei voi palauttaa, jotta salasana ei ole luettavissa edes tietokannasta |
+| **Tailwind CSS** | Tyylityökalu, jolla sivujen ulkoasu tehdään ja jolla näkymä saadaan toimimaan myös puhelimen kokoisella ruudulla |
+| **Recharts** | Kirjasto, jolla hinnat piirretään pylväskaaviona |
+| **Zod** | Tarkistustyökalu, joka varmistaa, että käyttäjän lomakkeelle syöttämät tiedot ovat kelvollisia ennen tallennusta |
+| **Vitest** | Testityökalu, jolla yksikkötestit ajetaan |
+| **GitHub** | Versionhallintapalvelu, jossa työn historia säilyy ja näkyy |
+| **GitHub Actions** | Automaatio, joka tarkistaa jokaisen muutoksen (tyylivirheet, tyypit ja testit) ennen kuin se hyväksytään |
+| **Vercel** | Julkaisupalvelu, joka vie sovelluksen julkiseen osoitteeseen automaattisesti aina kun päälinjaan tulee muutos |
+| **api.porssisahko.net** | Avoin rajapinta, josta Suomen pörssisähkön hinnat haetaan; varalla ENTSO-E:n rajapinta |
