@@ -1,0 +1,17 @@
+# Riippuvuudet, jotka asennetaan komennolla npm install
+node_modules/
+
+# Ympäristömuuttujat eli salaiset asetukset (tietokannan osoite, salasanat).
+# Repoon tulee vain malli .env.example.
+.env
+.env*.local
+
+# Next.jsin kääntämät tiedostot ja rakennustulokset
+.next/
+out/
+build/
+
+# Käyttöjärjestelmän ja editorin omat apu- ja väliaikaistiedostot
+.DS_Store
+*.log
+coverage/
