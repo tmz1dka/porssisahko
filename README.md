@@ -2,6 +2,8 @@
 
 [![CI](https://github.com/tmz1dka/porssisahko/actions/workflows/ci.yml/badge.svg)](https://github.com/tmz1dka/porssisahko/actions/workflows/ci.yml)
 
+**Sovellus verkossa: <https://porssisahko-pink.vercel.app>**
+
 Sovellus, joka kertoo kotitalouden laitteille halvimman sähkönkäyttöajan.
 
 Suomessa pörssisähkön hinta vaihtelee tunnin (tai 15 minuutin) tarkkuudella.
@@ -71,6 +73,8 @@ tyhjä `.env` riittää. Tietokanta otetaan käyttöön vaiheessa 4.
 | `npm run typecheck` | Tarkistaa TypeScript-tyypit ilman kääntämistä. |
 | `npm test` | Ajaa yksikkötestit. |
 
+Julkaistu versio on osoitteessa <https://porssisahko-pink.vercel.app>.
+
 ## Kansiorakenne
 
 ```
@@ -119,7 +123,7 @@ Julkaisun käyttöönotto tehdään kertaluonteisesti:
    tiedoston [.env.example](.env.example) mukaisesti
 4. Paina **Deploy**
 
-Julkinen osoite lisätään tähän, kun ensimmäinen julkaisu on tehty.
+Sovellus on julkaistu osoitteeseen <https://porssisahko-pink.vercel.app>.
 
 ## Ympäristömuuttujat
 
