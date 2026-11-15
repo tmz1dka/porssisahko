@@ -73,8 +73,6 @@ tyhjä `.env` riittää. Tietokanta otetaan käyttöön vaiheessa 4.
 | `npm run typecheck` | Tarkistaa TypeScript-tyypit ilman kääntämistä. |
 | `npm test` | Ajaa yksikkötestit. |
 
-Julkaistu versio on osoitteessa <https://porssisahko-pink.vercel.app>.
-
 ## Kansiorakenne
 
 ```
