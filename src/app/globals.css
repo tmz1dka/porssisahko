@@ -1,0 +1,21 @@
+/* Sovelluksen yhteiset tyylit. Tailwind tuodaan tähän yhdellä rivillä,
+   minkä jälkeen tyylit kirjoitetaan komponenteissa luokkaniminä. */
+@import "tailwindcss";
+
+:root {
+  --tausta: #ffffff;
+  --teksti: #111827;
+}
+
+/* Tumma tila seuraa käyttäjän laitteen omaa asetusta. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --tausta: #0b1220;
+    --teksti: #f3f4f6;
+  }
+}
+
+body {
+  background: var(--tausta);
+  color: var(--teksti);
+}
