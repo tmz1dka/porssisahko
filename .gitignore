@@ -15,3 +15,9 @@ build/
 .DS_Store
 *.log
 coverage/
+
+# TypeScriptin oma välimuistitiedosto (syntyy itsestään, ei kuulu repoon)
+*.tsbuildinfo
+
+# Vercelin paikalliset asetukset
+.vercel
