@@ -72,6 +72,9 @@ tyhjä `.env` riittää. Tietokanta otetaan käyttöön vaiheessa 4.
 | `npm run lint` | Tarkastaa koodin ESLintillä. |
 | `npm run typecheck` | Tarkistaa TypeScript-tyypit ilman kääntämistä. |
 | `npm test` | Ajaa yksikkötestit. |
+| `npm run db:migrate` | Luo tietokantaan muutokset, jotka skeemaan on tehty. |
+| `npm run db:seed` | Luo ensimmäisen ylläpitäjätilin. Turvallista ajaa uudelleen. |
+| `npm run db:studio` | Avaa selaimeen näkymän, josta tietokannan sisällön näkee. |
 
 ## Kansiorakenne
 
@@ -84,6 +87,50 @@ src/
 docs/
   suunnitelma.md   Suunnitteludokumentti: mitä rakennetaan ja miksi.
 ```
+
+## Tietokanta
+
+Tiedot säilyvät PostgreSQL-tietokannassa, joka on Neon-palvelussa. Tietokannan
+rakenne on kuvattu yhdessä tiedostossa, [prisma/schema.prisma](prisma/schema.prisma),
+ja siitä luodaan sekä oikeat tietokantataulut että koodin käyttämät tyypitetyt
+hakufunktiot.
+
+Tauluja on kaksi:
+
+- **User** – käyttäjä: sähköposti (uniikki, toimii käyttäjätunnuksena),
+  salasanan tiiviste, rooli (`USER` tai `ADMIN`) ja luontiaika.
+- **Device** – yksi kotitalouden laite: nimi, teho kilowatteina, käyttökerran
+  kesto tunteina ja viittaus omistajaan.
+
+Yhdellä käyttäjällä voi olla monta laitetta, ja jokainen laite kuuluu
+täsmälleen yhdelle käyttäjälle. Kun käyttäjä poistaa tilinsä, tietokanta
+poistaa samalla hänen laitteensa, jottei tietoja jää ilman omistajaa.
+
+**Salasanoja ei tallenneta koskaan luettavassa muodossa.** Kentän nimi on
+`passwordHash`, ja siihen tallennetaan bcrypt-tiiviste: salasanasta laskettu
+merkkijono, josta alkuperäistä salasanaa ei voi palauttaa. Kirjautuessa
+annettu salasana lasketaan samalla tavalla ja tuloksia verrataan.
+
+### Käyttöönotto omalla koneella
+
+```bash
+# 1. Luo tietokanta osoitteessa neon.tech ja kopioi yhteysosoite .env-tiedostoon
+cp .env.example .env
+
+# 2. Luo taulut tietokantaan
+npm run db:migrate
+
+# 3. Luo ensimmäinen ylläpitäjätili (.env-tiedoston ADMIN-arvoilla)
+npm run db:seed
+```
+
+Migraatio tarkoittaa yhtä muutosaskelta tietokannan rakenteeseen. Jokainen
+muutos tallentuu omaksi tiedostokseen kansioon `prisma/migrations`, joten
+tietokannan rakenne voidaan luoda tyhjästä uudelleen missä tahansa
+ympäristössä samassa järjestyksessä.
+
+Tuotannossa migraatiot ajetaan automaattisesti julkaisun yhteydessä
+(`vercel-build`-komento), joten tuotannon tietokanta on aina ajan tasalla.
 
 ## Automaattiset tarkistukset (CI)
 

@@ -26,3 +26,7 @@ next-env.d.ts
 
 # Vercelin paikalliset asetukset
 .vercel
+
+# Prisman koneellisesti luoma tietokanta-asiakas. Syntyy komennolla
+# "prisma generate", joka ajetaan automaattisesti npm installin jälkeen.
+/src/generated/
