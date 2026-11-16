@@ -1,0 +1,73 @@
+// Tietokannan rakenne yhdessä tiedostossa. Prisma luo tästä sekä oikeat
+// tietokantataulut (migraatio) että tyypitetyt hakufunktiot koodia varten.
+
+generator client {
+  provider = "prisma-client"
+  // Luotu koodi syntyy koneellisesti eikä mene versionhallintaan.
+  // Se luodaan uudelleen komennolla "prisma generate" (ajetaan automaattisesti
+  // npm installin jälkeen, jotta CI ja Vercel saavat sen itsestään).
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Käyttäjän rooli. USER on tavallinen käyttäjä, ADMIN näkee ylläpitosivun.
+// Rooli on erillinen tyyppi eikä vapaa teksti, jotta kirjoitusvirhe
+// (esim. "admin" pienellä) ei voi antaa vääriä oikeuksia.
+enum Role {
+  USER
+  ADMIN
+}
+
+// Sovelluksen käyttäjä.
+model User {
+  id String @id @default(cuid())
+
+  // Sähköposti toimii käyttäjätunnuksena, joten sen on oltava uniikki.
+  // Tallennetaan pieninä kirjaimina, jotta "Maija@..." ja "maija@..."
+  // eivät voi olla kaksi eri tiliä.
+  email String @unique
+
+  // Salasanaa EI tallenneta koskaan luettavassa muodossa, vaan bcrypt-tiivisteenä,
+  // josta alkuperäistä salasanaa ei voi palauttaa. Siksi kentän nimi on
+  // passwordHash eikä password – nimi kertoo, mitä kenttä oikeasti sisältää.
+  passwordHash String
+
+  role Role @default(USER)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Käyttäjän laitteet. Yhdellä käyttäjällä voi olla monta laitetta.
+  devices Device[]
+}
+
+// Yksi kotitalouden sähkölaite, esimerkiksi pyykinpesukone.
+model Device {
+  id String @id @default(cuid())
+
+  // Käyttäjän antama nimi, esim. "Pyykinpesukone".
+  name String
+
+  // Laitteen teho kilowatteina (esim. 2) ja yhden käyttökerran kesto
+  // tunteina (esim. 2 tai 0.5). Liukuluku riittää, koska nämä ovat
+  // käyttäjän arvioita laitteen kyljestä, eivät rahasummia.
+  powerKw       Float
+  durationHours Float
+
+  // Laite kuuluu aina täsmälleen yhdelle käyttäjälle.
+  // onDelete: Cascade tarkoittaa, että kun käyttäjä poistaa tilinsä,
+  // tietokanta poistaa samalla hänen laitteensa. Näin yhdenkään käyttäjän
+  // tietoja ei jää roikkumaan ilman omistajaa.
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Hakemisto nopeuttaa kyselyä "hae tämän käyttäjän laitteet", joka on
+  // sovelluksen yleisin haku.
+  @@index([userId])
+}
