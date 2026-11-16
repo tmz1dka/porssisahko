@@ -1,5 +1,9 @@
 # Pörssisähköoptimoija
 
+[![CI](https://github.com/tmz1dka/porssisahko/actions/workflows/ci.yml/badge.svg)](https://github.com/tmz1dka/porssisahko/actions/workflows/ci.yml)
+
+**Sovellus verkossa: <https://porssisahko-pink.vercel.app>**
+
 Sovellus, joka kertoo kotitalouden laitteille halvimman sähkönkäyttöajan.
 
 Suomessa pörssisähkön hinta vaihtelee tunnin (tai 15 minuutin) tarkkuudella.
@@ -80,6 +84,44 @@ src/
 docs/
   suunnitelma.md   Suunnitteludokumentti: mitä rakennetaan ja miksi.
 ```
+
+## Automaattiset tarkistukset (CI)
+
+CI tarkoittaa automaattista tarkastusta: GitHub ajaa jokaiselle muutokselle
+samat komennot kuin kehittäjä omalla koneellaan, joten rikkinäinen koodi ei
+pääse `main`-haaraan huomaamatta. Työnkulku on tiedostossa
+[.github/workflows/ci.yml](.github/workflows/ci.yml) ja se ajetaan jokaisesta
+pull requestista sekä jokaisesta `main`-haaran muutoksesta.
+
+Vaiheet ajetaan tässä järjestyksessä:
+
+1. `npm ci` – asentaa riippuvuudet täsmälleen `package-lock.json`in mukaan,
+   jotta ajo on toistettava
+2. `npm run lint`
+3. `npm run build` – ajetaan ennen tyyppitarkistusta, koska Next.js luo
+   käännöksen yhteydessä reittien tyyppitiedostot
+4. `npm run typecheck`
+5. `npm test`
+
+Jos jokin vaihe epäonnistuu, pull requestiin tulee punainen merkki.
+
+## Julkaisu
+
+Sovellus julkaistaan [Vercelissä](https://vercel.com), joka on Next.jsin
+kehittäjän oma julkaisupalvelu. Vercel seuraa GitHub-repoa: jokainen
+`main`-haaran muutos julkaistaan automaattisesti tuotantoon, ja jokaisesta
+pull requestista syntyy oma esikatseluosoite.
+
+Julkaisun käyttöönotto tehdään kertaluonteisesti:
+
+1. Kirjaudu Verceliin GitHub-tunnuksella ja valitse **Add New → Project**
+2. Valitse tämä repo. Vercel tunnistaa Next.jsin itse, joten
+   käännösasetuksia ei tarvitse muuttaa
+3. Lisää ympäristömuuttujat kohdassa **Settings → Environment Variables**
+   tiedoston [.env.example](.env.example) mukaisesti
+4. Paina **Deploy**
+
+Sovellus on julkaistu osoitteeseen <https://porssisahko-pink.vercel.app>.
 
 ## Ympäristömuuttujat
 

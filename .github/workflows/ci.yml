@@ -1,0 +1,48 @@
+# Automaattinen tarkastus (CI). GitHub ajaa tämän työnkulun jokaiselle
+# muutokselle, joten rikkinäinen koodi ei pääse main-haaraan huomaamatta.
+name: CI
+
+# Milloin tarkastus ajetaan: kun main-haaraan tulee muutos ja kun
+# pull request avataan tai sitä päivitetään.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  tarkistukset:
+    name: Lint, tyypit, testit ja käännös
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Haetaan projektin koodi suoritusympäristöön.
+      - name: Hae koodi
+        uses: actions/checkout@v7
+
+      # 2. Asennetaan sama Node.js-versio kuin kehityksessä.
+      #    cache: npm nopeuttaa ajoa säilyttämällä ladatut riippuvuudet.
+      - name: Asenna Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      # 3. npm ci asentaa riippuvuudet täsmälleen package-lock.jsonin
+      #    mukaan, joten ajo on toistettava eikä versio voi vaihtua kesken.
+      - name: Asenna riippuvuudet
+        run: npm ci
+
+      - name: Tarkasta koodi (ESLint)
+        run: npm run lint
+
+      # Käännös ajetaan ennen tyyppitarkistusta, koska Next luo
+      # käännöksen yhteydessä reittien tyyppitiedostot, joita
+      # tyyppitarkistus tarvitsee.
+      - name: Käännä sovellus
+        run: npm run build
+
+      - name: Tarkista tyypit (TypeScript)
+        run: npm run typecheck
+
+      - name: Aja yksikkötestit (Vitest)
+        run: npm test
