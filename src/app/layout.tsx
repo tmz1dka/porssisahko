@@ -1,6 +1,7 @@
 // Sovelluksen uloin kehys: tämä tiedosto ympäröi kaikki sivut
 // (kieliasetus, yhteiset tyylit ja selaimen välilehden otsikko).
 import type { Metadata } from "next";
+import { Navigaatio } from "@/components/Navigaatio";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -14,7 +15,10 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="fi">
-      <body className="min-h-screen antialiased">{children}</body>
+      <body className="min-h-screen antialiased">
+        <Navigaatio />
+        {children}
+      </body>
     </html>
   );
 }
