@@ -165,6 +165,12 @@ ympäristössä samassa järjestyksessä.
 Tuotannossa migraatiot ajetaan automaattisesti julkaisun yhteydessä
 (`vercel-build`-komento), joten tuotannon tietokanta on aina ajan tasalla.
 
+Tämä tarkoittaa, että julkaisu tarvitsee tietokannan osoitteen. Vercelissä
+ympäristömuuttujat valitaan erikseen jokaiseen ympäristöön: **Production**
+(main-haaran julkaisu), **Preview** (pull requestin esikatselu) ja
+**Development**. Pelkkä Preview riittää pull requestin tarkistukseen mutta
+ei tuotantoon.
+
 ## Automaattiset tarkistukset (CI)
 
 CI tarkoittaa automaattista tarkastusta: GitHub ajaa jokaiselle muutokselle

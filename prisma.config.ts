@@ -19,9 +19,15 @@ if (tarvitseeTietokannan && !databaseUrl) {
       `Komento "prisma ${komento}" tarvitsee tietokantayhteyden, mutta ympäristömuuttuja DATABASE_URL on tyhjä.`,
       "",
       "Omalla koneella: kopioi .env.example tiedostoksi .env ja täytä tietokannan osoite.",
-      "Vercelissä: Settings > Environment Variables. Varmista, että muuttuja on",
-      "valittuna myös Preview-ympäristöön, sillä pull requestin esikatselujulkaisu",
-      "käyttää sitä. Muutos vaikuttaa vasta seuraavaan julkaisuun.",
+      "",
+      "Vercelissä: Settings > Environment Variables. Muuttuja pitää valita",
+      "ERIKSEEN kaikkiin kolmeen ympäristöön: Production, Preview ja Development.",
+      "Pull requestin esikatselujulkaisu käyttää Previewiä, mutta main-haaraan",
+      "yhdistämisestä syntyvä julkaisu käyttää Productionia – pelkkä Preview",
+      "riittää siis PR:n tarkistukseen mutta ei tuotantoon.",
+      "",
+      "Muutos vaikuttaa vasta uudesta commitista tehtyyn julkaisuun,",
+      "ei Redeploy-painikkeella.",
     ].join("\n"),
   );
 }
