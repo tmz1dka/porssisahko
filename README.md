@@ -31,7 +31,7 @@ Alla on lyhyt selitys jokaisesta välineestä ja siitä, miksi se on valittu.
 | **TypeScript** | JavaScript, johon on lisätty tyypit. Tyypit kertovat, millaista tietoa funktio odottaa, joten osa virheistä löytyy jo ennen ohjelman ajamista. |
 | **Tailwind CSS** | Tyylikirjasto, jossa ulkoasu kirjoitetaan valmiina luokkaniminä suoraan sivun rakenteeseen. |
 | **PostgreSQL + Prisma** | Tietokanta ja sen käsittelykirjasto. Prisma kuvaa tietokannan rakenteen yhdessä tiedostossa ja luo siitä tyypitetyt hakufunktiot. Otetaan käyttöön vaiheessa 4. |
-| **Auth.js** | Käyttäjänhallinta: rekisteröityminen, kirjautuminen ja roolit. Otetaan käyttöön vaiheessa 5. |
+| **Auth.js** | Käyttäjänhallinta: rekisteröityminen, kirjautuminen ja roolit. |
 | **Zod** | Tarkistaa, että käyttäjän syöttämä tieto on oikeanlaista ennen tallennusta. |
 | **Recharts** | Piirtää hintakaaviot. |
 | **Vitest** | Ajaa yksikkötestit eli pienet tarkistukset, jotka varmistavat yksittäisten funktioiden toimivan oikein. |
@@ -83,7 +83,9 @@ src/
   app/        Sivut ja sovelluksen kehys. Kansiorakenne määrää osoitteet:
               app/page.tsx on etusivu "/".
   lib/        Oma logiikka, joka ei ole sidottu yhteen sivuun
-              (esimerkiksi hinnan laskenta ja muotoilu).
+              (esimerkiksi hinnan laskenta, pääsysäännöt ja muotoilu).
+  proxy.ts    Reittien suojaus: ajetaan ennen sivua ja ohjaa pois
+              sellaiselta sivulta, jolle käyttäjällä ei ole oikeutta.
 docs/
   suunnitelma.md   Suunnitteludokumentti: mitä rakennetaan ja miksi.
 ```
@@ -119,7 +121,60 @@ Kolme tietoista tietoturvaratkaisua:
 Uloskirjautuminen on painike lomakkeessa, ei linkki, koska se muuttaa tilaa.
 Linkkiä voisi kutsua vahingossa esimerkiksi selaimen esilataus.
 
-Roolit (`USER` ja `ADMIN`) ja sivujen suojaus tulevat vaiheessa 6.
+### Roolit ja sivujen suojaus
+
+Jokaisella käyttäjällä on rooli: `USER` tai `ADMIN`. Uusi tunnus saa aina
+roolin `USER`; ylläpitäjä luodaan erikseen tietokannan alustuksessa
+(`npm run db:seed`).
+
+| Osoite | Kenelle |
+|---|---|
+| `/`, `/prices`, `/login`, `/register` | Kaikille |
+| `/dashboard`, `/devices`, `/settings` | Kirjautuneille |
+| `/admin` | Vain roolille `ADMIN` |
+
+Suojaus tehdään **kahdessa kohdassa, ei yhdessä**:
+
+1. [src/proxy.ts](src/proxy.ts) tarkistaa oikeuden ennen kuin sivua aletaan
+   edes rakentaa. Kirjautumaton ohjataan kirjautumissivulle, väärällä roolilla
+   oleva koontinäkymään. Hänet on jo tunnistettu, joten kirjautumissivu olisi
+   hänelle umpikuja.
+2. Sivu itse tarkistaa oikeuden uudelleen palvelimella
+   ([src/lib/istunto.ts](src/lib/istunto.ts)).
+
+Kaksi tarkistusta siksi, että kohdan 1 polkulistaan jää helposti uusi sivu
+lisäämättä. Silloin sivu itse estää pääsyn. Lisäksi server actionia eli
+palvelimella ajettavaa toimintoa voi kutsua suoraan avaamatta sivua, joten
+pelkkä sivun suojaus ei riittäisi.
+
+Säännöt siitä, kuka pääsee minne, ovat puhtaina funktioina tiedostossa
+[src/lib/kayttooikeudet.ts](src/lib/kayttooikeudet.ts), ja niille on
+yksikkötestit. Näin sääntö voidaan tarkistaa ilman selainta.
+
+Kaksi tietoisesti tehtyä ratkaisua lisää:
+
+- **Ylläpitäjän rooli tarkistetaan tietokannasta**, ei istunnosta. Istunto on
+  eväste, joka säilyy selaimessa kirjautumisesta lähtien, joten siinä voi
+  lukea vanha rooli. Jos ylläpito-oikeus poistetaan, pelkkä istunnon
+  lukeminen päästäisi käyttäjän edelleen sisään. Tämä on yksi
+  tietokantakysely ylläpitosivun latausta kohden.
+- **Kirjautumisen jälkeinen paluuosoite tarkistetaan.** Suojatulta sivulta
+  ohjattu käyttäjä palaa kirjautumisen jälkeen sinne, minne oli menossa.
+  Osoite kulkee parametrissa, joten hyväksytään vain oman sivuston sisäinen
+  polku. Muuten osoitteeseen voisi liittää ulkopuolisen sivuston ja
+  kirjautunut käyttäjä ohjautuisi sinne.
+
+### Tilin poisto
+
+Käyttäjä voi poistaa tilinsä sivulla `/settings`. Poisto vaatii kaksi
+vahvistusta: nykyisen salasanan ja erillisen ruksin. Salasana siksi, että
+poistoa ei voi peruuttaa eikä avoimeksi jäänyt selain riitä tilin
+poistamiseen. Tilin mukana poistuvat käyttäjän laitteet, koska tietokannan
+säännössä on `onDelete: Cascade` – orpoja rivejä ei jää.
+
+Viimeistä ylläpitäjää ei voi poistaa. Muuten sovellukseen ei jäisi ketään,
+joka voi hallita käyttäjiä, eikä tilannetta saisi korjattua sovelluksen
+kautta lainkaan.
 
 ## Tietokanta
 
