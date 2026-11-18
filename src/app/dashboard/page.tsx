@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 };
 
 export default async function KoontinakymaPage() {
-  // Middleware on jo ohjannut kirjautumattoman pois, mutta tarkistus
+  // Reittisuojaus on jo ohjannut kirjautumattoman pois, mutta tarkistus
   // tehdään myös tässä. Sivun oma tarkistus on se, joka varmasti pitää.
   const istunto = await vaadiIstunto();
 

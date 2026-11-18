@@ -15,7 +15,7 @@ type Props = {
 export default async function KirjautumisPage({ searchParams }: Props) {
   const { seuraava } = await searchParams;
 
-  // Middleware liittää osoitteeseen sen sivun, jolle käyttäjä oli menossa.
+  // Reittisuojaus liittää osoitteeseen sen sivun, jolle käyttäjä oli menossa.
   // Osoite tarkistetaan, jotta sitä ei voi käyttää ohjaamaan toiselle
   // sivustolle. Oletuksena mennään koontinäkymään.
   const paluuosoite = turvallinenPaluuosoite(seuraava) ?? "/dashboard";

@@ -9,7 +9,7 @@ export async function Navigaatio() {
   const kirjautunut = Boolean(istunto?.user);
 
   // Ylläpitolinkki näytetään vain ylläpitäjälle. Tämä on käytettävyyttä,
-  // ei turvaa: varsinainen esto tehdään middlewaressa ja sivulla itsellään.
+  // ei turvaa: varsinainen esto tehdään reittisuojauksessa ja sivulla itsellään.
   const onYllapitaja = istunto?.user.role === "ADMIN";
 
   return (

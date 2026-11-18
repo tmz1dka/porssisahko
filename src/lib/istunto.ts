@@ -1,6 +1,7 @@
 // Apufunktiot istunnon vaatimiseen sivulla tai server actionissa.
 //
-// Nämä ovat middlewaren rinnalla toimiva toinen lukko. Ne ajetaan aina
+// Nämä ovat reittisuojauksen (src/proxy.ts) rinnalla toimiva toinen lukko.
+// Ne ajetaan aina
 // palvelimella, joten niitä ei voi ohittaa selaimesta – esimerkiksi
 // kutsumalla server actionia suoraan ilman sivun avaamista.
 import { redirect } from "next/navigation";

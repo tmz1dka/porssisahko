@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default async function YllapitoPage() {
   // Jos tänne pääsee tavallisella tunnuksella, roolien suojaus on rikki.
-  // Siksi tarkistus tehdään tässä, ei pelkästään middlewaressa.
+  // Siksi tarkistus tehdään tässä, ei pelkästään reittisuojauksessa.
   const istunto = await vaadiAdmin();
 
   return (

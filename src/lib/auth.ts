@@ -10,7 +10,8 @@ import { kirjautumisSkeema } from "@/lib/validointi";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   // Yhteiset asetukset (istunto, sivut, callbackit) tulevat auth.config.:sta,
-  // jota myös middleware käyttää. Tässä lisätään vain tunnistautuminen,
+  // jota myös reittisuojaus (src/proxy.ts) käyttää. Tässä lisätään vain
+  // tunnistautuminen,
   // joka tarvitsee tietokannan ja salasanojen vertailun.
   ...authAsetukset,
   providers: [

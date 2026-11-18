@@ -1,11 +1,14 @@
-// Reittien suojaus. Middleware on koodi, joka ajetaan ennen kuin pyyntö
+// Reittien suojaus. Tämä tiedosto on koodia, joka ajetaan ennen kuin pyyntö
 // päätyy sivulle. Tässä se tarkistaa istunnon ja roolin, ja ohjaa käyttäjän
 // pois sellaiselta sivulta, jolle hänellä ei ole asiaa.
 //
+// Next.js kutsui tätä aiemmin nimellä "middleware" ja versiosta 16 alkaen
+// nimellä "proxy". Kyse on samasta asiasta, vain tiedoston nimi vaihtui.
+//
 // Tämä on ensimmäinen lukko, ei ainoa. Jokainen suojattu sivu tarkistaa
 // oikeuden myös itse palvelimella (ks. src/lib/istunto.ts). Kaksi tarkistusta,
-// koska middlewaren asetuksiin (matcher alla) jää helposti uusi sivu
-// lisäämättä – silloin sivu itse estää pääsyn.
+// koska alla olevaan polkulistaan jää helposti uusi sivu lisäämättä –
+// silloin sivu itse estää pääsyn.
 import NextAuth from "next-auth";
 import { NextResponse } from "next/server";
 import { authAsetukset } from "@/lib/auth.config";
@@ -34,7 +37,7 @@ export default auth((pyynto) => {
   return NextResponse.redirect(kohde);
 });
 
-// Middleware ajetaan vain näillä poluilla. ":path*" tarkoittaa myös alasivut.
+// Tarkistus ajetaan vain näillä poluilla. ":path*" tarkoittaa myös alasivut.
 // Lista pidetään tarkoituksella suppeana, jotta tarkistus ei hidasta
 // julkisia sivuja eikä kuvatiedostojen hakemista.
 export const config = {

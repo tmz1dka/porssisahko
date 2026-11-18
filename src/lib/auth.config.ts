@@ -1,16 +1,16 @@
 // Kirjautumisen ne asetukset, jotka eivät tarvitse tietokantaa.
 //
-// Asetukset on jaettu kahteen tiedostoon tarkoituksella. Middleware eli
-// reittien suojaus ajetaan kevyessä ympäristössä, jossa tietokanta-ajuri ja
+// Asetukset on jaettu kahteen tiedostoon tarkoituksella. Reittien suojaus
+// (src/proxy.ts) ajetaan kevyessä ympäristössä, jossa tietokanta-ajuri ja
 // salasanojen tiivistyskirjasto eivät toimi. Kun ne jätetään tästä pois,
-// middleware voi silti lukea istunnon evästeestä ja tarkistaa roolin.
+// suojaus voi silti lukea istunnon evästeestä ja tarkistaa roolin.
 // Varsinainen tunnistautuminen on tiedostossa auth.ts.
 import type { NextAuthConfig } from "next-auth";
 
 export const authAsetukset = {
   // Istunto tallennetaan selaimen evästeeseen allekirjoitettuna (JWT),
   // ei tietokantaan. Tämä on Credentials-kirjautumisen vaatima tapa ja
-  // samalla syy siihen, että middleware pärjää ilman tietokantaa.
+  // samalla syy siihen, että reittisuojaus pärjää ilman tietokantaa.
   session: { strategy: "jwt" },
 
   // Oma kirjautumissivu Auth.js:n oletussivun sijaan.
@@ -28,7 +28,7 @@ export const authAsetukset = {
     },
 
     // Tässä istunnon tiedot siirretään muotoon, jonka sovelluksen sivut
-    // ja middleware näkevät.
+    // ja reittisuojaus näkevät.
     async session({ session, token }) {
       if (token.id) {
         session.user.id = token.id;
@@ -41,6 +41,6 @@ export const authAsetukset = {
   },
 
   // Providers täytetään tiedostossa auth.ts. Tyhjä lista tässä pitää
-  // middlewaren riippuvuudet kevyinä.
+  // reittisuojauksen riippuvuudet kevyinä.
   providers: [],
 } satisfies NextAuthConfig;

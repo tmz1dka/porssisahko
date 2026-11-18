@@ -15,7 +15,7 @@ export async function poistaTili(
   lomake: FormData,
 ): Promise<PoistoTila> {
   // Oikeus tarkistetaan myös tässä. Server actionia voi kutsua suoraan
-  // ilman sivun avaamista, joten middlewaren tarkistus ei yksin riitä.
+  // ilman sivun avaamista, joten reittisuojauksen tarkistus ei yksin riitä.
   const istunto = await vaadiIstunto();
 
   const salasana = String(lomake.get("password") ?? "");
