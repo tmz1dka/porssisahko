@@ -79,3 +79,21 @@ export function turvallinenPaluuosoite(osoite: string | null | undefined): strin
 
   return osoite;
 }
+
+/**
+ * Kertoo, saako käyttäjä poistaa oman tilinsä.
+ *
+ * Viimeistä ylläpitäjää ei voi poistaa: muuten sovellukseen ei jäisi
+ * ketään, joka voi hallita käyttäjiä, eikä tilannetta saisi korjattua
+ * sovelluksen kautta lainkaan.
+ */
+export function voikoPoistaaOmanTilin(
+  rooli: Rooli,
+  yllapitajienMaara: number,
+): boolean {
+  if (rooli !== "ADMIN") {
+    return true;
+  }
+
+  return yllapitajienMaara > 1;
+}

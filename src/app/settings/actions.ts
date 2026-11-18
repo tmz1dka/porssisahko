@@ -4,6 +4,7 @@
 import bcrypt from "bcryptjs";
 import { signOut } from "@/lib/auth";
 import { vaadiIstunto } from "@/lib/istunto";
+import { voikoPoistaaOmanTilin } from "@/lib/kayttooikeudet";
 import { prisma } from "@/lib/prisma";
 
 export type PoistoTila = {
@@ -49,17 +50,18 @@ export async function poistaTili(
     return { virhe: "Salasana on väärin." };
   }
 
-  // Viimeistä ylläpitäjää ei voi poistaa. Muuten sovellukseen ei jäisi
-  // ketään, joka voi hallita käyttäjiä.
-  if (kayttaja.role === "ADMIN") {
-    const yllapitajia = await prisma.user.count({ where: { role: "ADMIN" } });
+  // Ylläpitäjien määrä lasketaan vain silloin, kun poistaja on itse
+  // ylläpitäjä. Päätössääntö on omana funktiona, jotta se on testattavissa.
+  const yllapitajia =
+    kayttaja.role === "ADMIN"
+      ? await prisma.user.count({ where: { role: "ADMIN" } })
+      : 0;
 
-    if (yllapitajia <= 1) {
-      return {
-        virhe:
-          "Viimeistä ylläpitäjää ei voi poistaa. Tee ensin toisesta käyttäjästä ylläpitäjä.",
-      };
-    }
+  if (!voikoPoistaaOmanTilin(kayttaja.role, yllapitajia)) {
+    return {
+      virhe:
+        "Viimeistä ylläpitäjää ei voi poistaa. Tee ensin toisesta käyttäjästä ylläpitäjä.",
+    };
   }
 
   // Käyttäjän laitteet poistuvat samalla, koska tietokannan säännössä on

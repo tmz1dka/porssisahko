@@ -3,6 +3,7 @@
 import { describe, expect, it } from "vitest";
 import {
   tarkistaPaasy,
+  voikoPoistaaOmanTilin,
   turvallinenPaluuosoite,
   vaatiiAdminin,
   vaatiiKirjautumisen,
@@ -90,5 +91,19 @@ describe("turvallinenPaluuosoite", () => {
     expect(turvallinenPaluuosoite("https://huijaus.example")).toBeNull();
     expect(turvallinenPaluuosoite("//huijaus.example")).toBeNull();
     expect(turvallinenPaluuosoite("/\\huijaus.example")).toBeNull();
+  });
+});
+
+describe("voikoPoistaaOmanTilin", () => {
+  it("antaa tavallisen käyttäjän poistaa tilinsä", () => {
+    expect(voikoPoistaaOmanTilin("USER", 1)).toBe(true);
+  });
+
+  it("estää viimeisen ylläpitäjän poistamisen", () => {
+    expect(voikoPoistaaOmanTilin("ADMIN", 1)).toBe(false);
+  });
+
+  it("antaa ylläpitäjän poistaa tilinsä, kun ylläpitäjiä on useampi", () => {
+    expect(voikoPoistaaOmanTilin("ADMIN", 2)).toBe(true);
   });
 });
