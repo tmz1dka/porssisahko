@@ -88,6 +88,39 @@ docs/
   suunnitelma.md   Suunnitteludokumentti: mitä rakennetaan ja miksi.
 ```
 
+## Käyttäjänhallinta
+
+Käyttäjä luo tunnuksen sähköpostilla ja salasanalla sivulla `/register` ja
+kirjautuu sisään sivulla `/login`. Kirjautuminen hoidetaan Auth.js-kirjastolla.
+
+**Istunto** eli muistaminen siitä, kuka on kirjautuneena, tallennetaan
+selaimen evästeeseen allekirjoitettuna. Allekirjoitus tehdään
+`AUTH_SECRET`-avaimella, joten evästettä ei voi muokata itse ja esiintyä
+toisena käyttäjänä. Istuntoa ei tallenneta tietokantaan, koska
+sähköposti–salasana-kirjautuminen ei sitä vaadi.
+
+**Salasanat** tarkistetaan vertaamalla annettua salasanaa tietokannassa
+olevaan bcrypt-tiivisteeseen. Salasanaa ei käsitellä selaimessa eikä
+tallenneta lokiin.
+
+Kolme tietoista tietoturvaratkaisua:
+
+1. **Virheilmoitus on sama** väärästä sähköpostista ja väärästä salasanasta
+   ("Sähköposti tai salasana on väärin"). Muuten ulkopuolinen voisi kokeilla
+   osoitteita ja päätellä vastauksista, kenellä on tunnus palvelussa.
+2. **Vastaus kestää yhtä kauan** silloinkin, kun sähköpostia ei ole olemassa:
+   salasanaa verrataan valetiivisteeseen. Muuten vastausajasta voisi päätellä
+   saman asian kuin kohdassa 1.
+3. **Syötteet tarkistetaan palvelimella**, ei pelkästään lomakkeella.
+   Selaimen tarkistukset voi ohittaa, palvelimen ei. Samat säännöt ovat
+   tiedostossa [src/lib/validointi.ts](src/lib/validointi.ts), ja niille on
+   yksikkötestit.
+
+Uloskirjautuminen on painike lomakkeessa, ei linkki, koska se muuttaa tilaa.
+Linkkiä voisi kutsua vahingossa esimerkiksi selaimen esilataus.
+
+Roolit (`USER` ja `ADMIN`) ja sivujen suojaus tulevat vaiheessa 6.
+
 ## Tietokanta
 
 Tiedot säilyvät PostgreSQL-tietokannassa, joka on Neon-palvelussa. Tietokannan
