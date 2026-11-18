@@ -191,6 +191,13 @@ Vaiheet ajetaan tässä järjestyksessä:
 
 Jos jokin vaihe epäonnistuu, pull requestiin tulee punainen merkki.
 
+**CI kääntää sovelluksen ilman tietokantaa.** Se on tarkoituksellista:
+käännöksen ei kuuluisi tarvita tietokantayhteyttä, koska yksikään sivu ei
+hae tietoja käännöksen aikana. Siksi tietokantayhteys luodaan vasta
+ensimmäisellä käytöllä (katso [src/lib/prisma.ts](src/lib/prisma.ts)).
+Jos yhteys luotaisiin heti tiedoston latauksessa, käännös kaatuisi
+ympäristössä, jossa tietokantaa ei ole.
+
 ## Julkaisu
 
 Sovellus julkaistaan [Vercelissä](https://vercel.com), joka on Next.jsin
