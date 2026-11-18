@@ -1,13 +1,18 @@
-// Kirjautumisen asetukset. Auth.js hoitaa istunnon eli muistamisen siitä,
-// kuka on kirjautuneena. Tunnistautuminen tehdään sähköpostilla ja
-// salasanalla, jotka tarkistetaan omaa tietokantaa vastaan.
+// Tunnistautuminen: sähköpostin ja salasanan tarkistus tietokantaa vastaan.
+// Auth.js hoitaa istunnon eli muistamisen siitä, kuka on kirjautuneena.
+// Yhteiset asetukset ovat tiedostossa auth.config.ts.
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import { authAsetukset } from "@/lib/auth.config";
 import { kirjautumisSkeema } from "@/lib/validointi";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  // Yhteiset asetukset (istunto, sivut, callbackit) tulevat auth.config.:sta,
+  // jota myös middleware käyttää. Tässä lisätään vain tunnistautuminen,
+  // joka tarvitsee tietokannan ja salasanojen vertailun.
+  ...authAsetukset,
   providers: [
     Credentials({
       // Lomakkeen kentät. Auth.js antaa nämä authorize-funktiolle.
@@ -49,35 +54,4 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
     }),
   ],
-
-  // Istunto tallennetaan selaimen evästeeseen allekirjoitettuna (JWT),
-  // ei tietokantaan. Tämä on Credentials-kirjautumisen vaatima tapa.
-  session: { strategy: "jwt" },
-
-  // Oma kirjautumissivu Auth.js:n oletussivun sijaan.
-  pages: { signIn: "/login" },
-
-  callbacks: {
-    // Rooli ja tunniste tallennetaan istuntoon kirjautumisen yhteydessä,
-    // jottei niitä tarvitse hakea tietokannasta joka sivulatauksella.
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.role = user.role;
-      }
-      return token;
-    },
-
-    // Tässä istunnon tiedot siirretään muotoon, jonka sovelluksen sivut
-    // näkevät. Vaihe 6 käyttää roolia sivujen suojaamiseen.
-    async session({ session, token }) {
-      if (token.id) {
-        session.user.id = token.id;
-      }
-      if (token.role) {
-        session.user.role = token.role;
-      }
-      return session;
-    },
-  },
 });
