@@ -255,7 +255,7 @@ prisma.device.deleteMany({ where: { id, userId } });
 Muokkauksessa ja poistossa käytetään `updateMany`- ja `deleteMany`-kyselyitä
 eikä `update`- ja `delete`-kyselyitä. Syy on se, että jälkimmäiset
 hyväksyvät vain tunnisteen, jolloin omistaja pitäisi tarkistaa erikseen –
-ja se tarkistus voisi jäätä tekemättä. Kun ehto on kyselyssä itsessään,
+ja se tarkistus voisi jäädä tekemättä. Kun ehto on kyselyssä itsessään,
 sitä ei voi unohtaa. Kyselyt palauttavat muutettujen rivien määrän, josta
 nähdään, löytyikö laite.
 
