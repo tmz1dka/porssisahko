@@ -2,21 +2,16 @@
 // kertoo vain, kuka on kirjautuneena. Laitteet ja halvimmat käyttöajat
 // tulevat vaiheissa 8 ja 9.
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
+import { vaadiIstunto } from "@/lib/istunto";
 
 export const metadata: Metadata = {
   title: "Koontinäkymä – Pörssisähköoptimoija",
 };
 
 export default async function KoontinakymaPage() {
-  // Tarkistus tehdään palvelimella. Vaiheessa 6 lisätään tämän rinnalle
-  // middleware, joka ohjaa kirjautumattoman pois jo ennen sivun rakentamista.
-  const istunto = await auth();
-
-  if (!istunto?.user) {
-    redirect("/login");
-  }
+  // Reittisuojaus on jo ohjannut kirjautumattoman pois, mutta tarkistus
+  // tehdään myös tässä. Sivun oma tarkistus on se, joka varmasti pitää.
+  const istunto = await vaadiIstunto();
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-12">

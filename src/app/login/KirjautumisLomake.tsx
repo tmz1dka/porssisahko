@@ -9,11 +9,20 @@ import { kirjaudu, type KirjautumisTila } from "./actions";
 
 const alkutila: KirjautumisTila = {};
 
-export function KirjautumisLomake() {
+type Props = {
+  // Osoite, johon käyttäjä ohjataan onnistuneen kirjautumisen jälkeen.
+  paluuosoite: string;
+};
+
+export function KirjautumisLomake({ paluuosoite }: Props) {
   const [tila, lahetä, odottaa] = useActionState(kirjaudu, alkutila);
 
   return (
     <form action={lahetä} className="flex flex-col gap-4">
+      {/* Paluuosoite kulkee lomakkeen mukana piilokentässä. Palvelin
+          tarkistaa sen uudelleen, koska piilokentän arvoa voi muokata. */}
+      <input type="hidden" name="seuraava" value={paluuosoite} />
+
       <Lomakekentta
         nimi="email"
         otsikko="Sähköposti"

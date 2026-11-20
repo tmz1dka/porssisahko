@@ -3,6 +3,7 @@
 
 import { AuthError } from "next-auth";
 import { signIn, signOut } from "@/lib/auth";
+import { turvallinenPaluuosoite } from "@/lib/kayttooikeudet";
 import { kentanVirheet, kirjautumisSkeema } from "@/lib/validointi";
 
 export type KirjautumisTila = {
@@ -26,13 +27,17 @@ export async function kirjaudu(
     return { virheet: kentanVirheet(tulos.error), email: syote.email };
   }
 
+  // Lomakkeen piilokentän arvoon ei luoteta sellaisenaan: se tarkistetaan
+  // tässä uudelleen, jottei kirjautumista voi käyttää ohjaamaan käyttäjää
+  // toiselle sivustolle.
+  const paluuosoite =
+    turvallinenPaluuosoite(String(lomake.get("seuraava") ?? "")) ?? "/dashboard";
+
   try {
-    // redirectTo kertoo, mihin käyttäjä ohjataan onnistuneen kirjautumisen
-    // jälkeen. Koontinäkymä on sovelluksen tärkein sivu.
     await signIn("credentials", {
       email: tulos.data.email,
       password: tulos.data.password,
-      redirectTo: "/dashboard",
+      redirectTo: paluuosoite,
     });
   } catch (virhe) {
     // Onnistunut kirjautuminen tapahtuu uudelleenohjauksella, jonka Next.js

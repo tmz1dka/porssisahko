@@ -8,6 +8,10 @@ export async function Navigaatio() {
   const istunto = await auth();
   const kirjautunut = Boolean(istunto?.user);
 
+  // Ylläpitolinkki näytetään vain ylläpitäjälle. Tämä on käytettävyyttä,
+  // ei turvaa: varsinainen esto tehdään reittisuojauksessa ja sivulla itsellään.
+  const onYllapitaja = istunto?.user.role === "ADMIN";
+
   return (
     <header className="border-b border-gray-200 dark:border-gray-800">
       <nav className="mx-auto flex max-w-4xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
@@ -24,6 +28,16 @@ export async function Navigaatio() {
             <Link href="/dashboard" className="text-sm hover:underline">
               Koontinäkymä
             </Link>
+
+            <Link href="/settings" className="text-sm hover:underline">
+              Asetukset
+            </Link>
+
+            {onYllapitaja && (
+              <Link href="/admin" className="text-sm hover:underline">
+                Ylläpito
+              </Link>
+            )}
 
             {/* Uloskirjautuminen on lomake eikä linkki, koska se muuttaa
                 tilaa. Linkkiä voisi myös kutsua vahingossa esimerkiksi
