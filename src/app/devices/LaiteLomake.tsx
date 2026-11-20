@@ -26,6 +26,10 @@ function pilkulla(luku: number): string {
 export function LaiteLomake({ toiminto, laite, lahetysteksti }: Props) {
   const [tila, lahetä, odottaa] = useActionState(toiminto, alkutila);
 
+  // Kentän oletusarvo: ensin käyttäjän oma kirjoitus virheen jälkeen, sitten
+  // muokattavan laitteen arvo, ja uudella laitteella tyhjä.
+  const arvot = tila.arvot;
+
   return (
     <form action={lahetä} className="flex flex-col gap-4">
       <Lomakekentta
@@ -33,7 +37,7 @@ export function LaiteLomake({ toiminto, laite, lahetysteksti }: Props) {
         otsikko="Laitteen nimi"
         tyyppi="text"
         ohje="Esimerkiksi Pyykinpesukone tai Astianpesukone."
-        oletusarvo={laite?.name}
+        oletusarvo={arvot?.name ?? laite?.name}
         virhe={tila.virheet?.name}
       />
 
@@ -43,7 +47,7 @@ export function LaiteLomake({ toiminto, laite, lahetysteksti }: Props) {
         tyyppi="text"
         syotetila="decimal"
         ohje="Löytyy laitteen tyyppikilvestä. Jos siinä lukee watteja, jaa tuhannella: 2000 W on 2 kW."
-        oletusarvo={laite ? pilkulla(laite.powerKw) : undefined}
+        oletusarvo={arvot?.powerKw ?? (laite ? pilkulla(laite.powerKw) : undefined)}
         virhe={tila.virheet?.powerKw}
       />
 
@@ -53,7 +57,10 @@ export function LaiteLomake({ toiminto, laite, lahetysteksti }: Props) {
         tyyppi="text"
         syotetila="decimal"
         ohje="Kuinka kauan yksi käyttökerta kestää. Puoli tuntia on 0,5."
-        oletusarvo={laite ? pilkulla(laite.durationHours) : undefined}
+        oletusarvo={
+          arvot?.durationHours ??
+          (laite ? pilkulla(laite.durationHours) : undefined)
+        }
         virhe={tila.virheet?.durationHours}
       />
 
