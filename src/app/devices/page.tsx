@@ -5,6 +5,7 @@ import { vaadiIstunto } from "@/lib/istunto";
 import { haeLaitteet } from "@/lib/laitteet";
 import { laskeKulutusKwh } from "@/lib/hinta";
 import { poistaLaiteToiminto } from "./actions";
+import { PoistoPainike } from "./PoistoPainike";
 
 export const metadata: Metadata = {
   title: "Laitteet – Pörssisähköoptimoija",
@@ -73,13 +74,11 @@ export default async function LaitteetPage() {
                     Linkkiä voisi kutsua vahingossa esimerkiksi selaimen
                     esilataus. */}
                 <form action={poistaLaiteToiminto}>
+                  {/* Tunniste kulkee piilokentässä, mutta siihen ei luoteta:
+                      poisto tehdään kyselyllä, jossa on myös omistajan
+                      ehto, joten vieras tunniste ei poista mitään. */}
                   <input type="hidden" name="id" value={laite.id} />
-                  <button
-                    type="submit"
-                    className="text-red-700 underline dark:text-red-400"
-                  >
-                    Poista
-                  </button>
+                  <PoistoPainike laitteenNimi={laite.name} />
                 </form>
               </div>
             </li>
