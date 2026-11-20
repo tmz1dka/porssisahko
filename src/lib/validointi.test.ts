@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import {
   kentanVirheet,
   kirjautumisSkeema,
+  laiteSkeema,
   rekisterointiSkeema,
 } from "@/lib/validointi";
 
@@ -116,5 +117,75 @@ describe("kentanVirheet", () => {
       expect(Object.keys(virheet).sort()).toEqual(["email", "password"]);
       expect(typeof virheet.email).toBe("string");
     }
+  });
+});
+
+describe("laiteSkeema", () => {
+  const kelvollinen = {
+    name: "Pyykinpesukone",
+    powerKw: "2",
+    durationHours: "2",
+  };
+
+  it("hyväksyy kelvollisen laitteen", () => {
+    const tulos = laiteSkeema.safeParse(kelvollinen);
+
+    expect(tulos.success).toBe(true);
+    expect(tulos.success && tulos.data.powerKw).toBe(2);
+  });
+
+  it("hyväksyy desimaalin pilkulla", () => {
+    // Suomalainen käyttäjä kirjoittaa "1,5", ei "1.5".
+    const tulos = laiteSkeema.safeParse({
+      ...kelvollinen,
+      powerKw: "1,5",
+      durationHours: "0,75",
+    });
+
+    expect(tulos.success && tulos.data.powerKw).toBe(1.5);
+    expect(tulos.success && tulos.data.durationHours).toBe(0.75);
+  });
+
+  it("poistaa nimen ympäriltä turhat välilyönnit", () => {
+    const tulos = laiteSkeema.safeParse({ ...kelvollinen, name: "  Uuni  " });
+    expect(tulos.success && tulos.data.name).toBe("Uuni");
+  });
+
+  it("vaatii nimen", () => {
+    const tulos = laiteSkeema.safeParse({ ...kelvollinen, name: "   " });
+    expect(tulos.success).toBe(false);
+  });
+
+  it("hylkää nollatehon ja negatiivisen tehon", () => {
+    expect(laiteSkeema.safeParse({ ...kelvollinen, powerKw: "0" }).success).toBe(
+      false,
+    );
+    expect(
+      laiteSkeema.safeParse({ ...kelvollinen, powerKw: "-2" }).success,
+    ).toBe(false);
+  });
+
+  it("hylkää tehon, joka on ilmeisesti watteina", () => {
+    // 2000 tarkoittaa käyttäjän mielessä watteja, ei kilowatteja.
+    const tulos = laiteSkeema.safeParse({ ...kelvollinen, powerKw: "2000" });
+    expect(tulos.success).toBe(false);
+  });
+
+  it("hylkää tyhjän kentän", () => {
+    const tulos = laiteSkeema.safeParse({ ...kelvollinen, durationHours: "" });
+    expect(tulos.success).toBe(false);
+  });
+
+  it("hylkää tekstin numerokentässä", () => {
+    const tulos = laiteSkeema.safeParse({ ...kelvollinen, powerKw: "paljon" });
+    expect(tulos.success).toBe(false);
+  });
+
+  it("hylkää yli vuorokauden keston", () => {
+    const tulos = laiteSkeema.safeParse({
+      ...kelvollinen,
+      durationHours: "25",
+    });
+    expect(tulos.success).toBe(false);
   });
 });
