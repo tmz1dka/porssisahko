@@ -31,10 +31,21 @@ const VARI_TAVALLINEN = "#2563eb";
 const VARI_HALVIN = "#16a34a";
 const VARI_NEGATIIVINEN = "#7c3aed";
 
+/** Näytetäänkö tämä kellonaika x-akselilla. */
+function onNaytettavaKello(kello: string): boolean {
+  const [tunti, minuutti] = kello.split(".");
+  // Vain tasatunnit ja niistäkin joka neljäs: 00, 04, 08, 12, 16 ja 20.
+  // Pylväitä voi olla 96 (15 minuutin jaksot), ja kapealla näytöllä
+  // tiheämmät aikaleimat menisivät päällekkäin lukukelvottomiksi.
+  return minuutti === "00" && Number(tunti) % 4 === 0;
+}
+
 export function HintaKaavio({ jaksot, halvinKello }: Props) {
-  // Kaavion pylväitä voi olla 96 (15 minuutin jaksot), joten kellonaika
-  // näytetään vain tasatunneilta. Muuten tekstit menisivät päällekkäin.
-  const naytaKello = (kello: string) => (kello.endsWith(".00") ? kello : "");
+  // Näytettävät aikaleimat lasketaan valmiiksi ja annetaan Rechartsille
+  // listana. Näin kaavio näyttää samalta kaikilla näytön leveyksillä.
+  const aikaleimat = jaksot
+    .map((jakso) => jakso.kello)
+    .filter(onNaytettavaKello);
 
   return (
     <div className="h-72 w-full">
@@ -43,7 +54,7 @@ export function HintaKaavio({ jaksot, halvinKello }: Props) {
           <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
           <XAxis
             dataKey="kello"
-            tickFormatter={naytaKello}
+            ticks={aikaleimat}
             interval={0}
             tick={{ fontSize: 11 }}
           />
@@ -70,10 +81,12 @@ export function HintaKaavio({ jaksot, halvinKello }: Props) {
           />
           {/* Nollaviiva näkyviin, koska hinta voi olla negatiivinen. */}
           <ReferenceLine y={0} stroke="currentColor" opacity={0.4} />
-          <Bar dataKey="sntPerKwh" name="Hinta">
-            {jaksot.map((jakso) => (
+          {/* Animaatio pois: kaavio on valmis heti eikä sivu näytä hetkeä
+              tyhjältä, mikä hidas yhteys korostaisi entisestään. */}
+          <Bar dataKey="sntPerKwh" name="Hinta" isAnimationActive={false}>
+            {jaksot.map((jakso, indeksi) => (
               <Cell
-                key={jakso.kello}
+                key={`${jakso.kello}-${indeksi}`}
                 fill={
                   jakso.sntPerKwh < 0
                     ? VARI_NEGATIIVINEN

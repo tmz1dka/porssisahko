@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { HintaKaavio, type KaavioJakso } from "@/components/HintaKaavio";
 import {
   onkoHuomiselleHintoja,
+  onkoPaivaKattava,
   paivanJaksot,
   suomenKellonaika,
   tilastot,
@@ -34,7 +35,10 @@ function Paivaosio({
 }) {
   const luvut = tilastot(jaksot);
 
-  if (!luvut) {
+  // Vaillinaisesta päivästä ei näytetä tilastoja lainkaan. Rajapinta antaa
+  // aina viimeiset 48 tuntia, joten illalla mukaan tulee muutama huomisen
+  // jakso – niistä laskettu "halvin aika" olisi harhaanjohtava.
+  if (!luvut || !onkoPaivaKattava(jaksot)) {
     return (
       <section className="mt-10">
         <h2 className="text-lg font-semibold">{otsikko}</h2>

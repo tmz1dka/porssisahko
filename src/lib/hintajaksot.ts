@@ -72,15 +72,40 @@ export function paivanJaksot(jaksot: Hintajakso[], paiva: Date): Hintajakso[] {
 }
 
 /**
- * Kertoo, onko huomiselle jo hintoja.
+ * Kuinka monta minuuttia vuorokaudesta hintoja pitää olla, jotta päivää
+ * pidetään julkaistuna.
  *
- * Huomisen hinnat julkaistaan vasta iltapäivällä, joten aamupäivällä
+ * Raja on 20 tuntia eikä 24, koska kellonsiirtopäivät ovat 23 ja 25 tuntia
+ * pitkiä. Raja tarvitaan, koska rajapinta antaa aina viimeiset 48 tuntia:
+ * illalla mukaan tulee muutama huomisen jakso, vaikka huomisen hintoja ei
+ * ole vielä julkaistu. Ilman rajaa sovellus laskisi "huomisen halvimman
+ * ajan" muutamasta ensimmäisestä minuutista ja antaisi väärän vastauksen.
+ */
+const PAIVAN_VAHIMMAISKATTAVUUS_MIN = 20 * 60;
+
+/** Laskee, kuinka monta minuuttia annetut jaksot kattavat yhteensä. */
+export function kattavuusMinuutteina(jaksot: Hintajakso[]): number {
+  return jaksot.reduce((summa, jakso) => summa + kestoMinuutteina(jakso), 0);
+}
+
+/**
+ * Kertoo, onko päivälle julkaistu hinnat koko vuorokaudelle.
+ * Yksittäiset jaksot vuorokauden alusta eivät riitä.
+ */
+export function onkoPaivaKattava(paivanJaksot: Hintajakso[]): boolean {
+  return kattavuusMinuutteina(paivanJaksot) >= PAIVAN_VAHIMMAISKATTAVUUS_MIN;
+}
+
+/**
+ * Kertoo, onko huomiselle jo hinnat.
+ *
+ * Huomisen hinnat julkaistaan vasta iltapäivällä, joten sitä ennen
  * sovelluksen pitää kertoa käyttäjälle, ettei niitä ole vielä saatavilla.
  * Tämä on yksi suunnitelmassa tunnistetuista reunatapauksista.
  */
 export function onkoHuomiselleHintoja(jaksot: Hintajakso[], nyt: Date): boolean {
   const huomenna = new Date(nyt.getTime() + 24 * 60 * 60 * 1000);
-  return paivanJaksot(jaksot, huomenna).length > 0;
+  return onkoPaivaKattava(paivanJaksot(jaksot, huomenna));
 }
 
 export type Tilastot = {

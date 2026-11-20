@@ -6,6 +6,7 @@ import {
   jarjestaAikajarjestykseen,
   kestoMinuutteina,
   onkoHuomiselleHintoja,
+  onkoPaivaKattava,
   paivanJaksot,
   suomenKellonaika,
   suomenPaiva,
@@ -105,11 +106,24 @@ describe("onkoHuomiselleHintoja", () => {
     expect(onkoHuomiselleHintoja(jaksot, nyt)).toBe(false);
   });
 
-  it("on tosi, kun huomiselle löytyy jakso", () => {
+  it("on epätosi, kun huomiselle on vain yksi jakso", () => {
+    // Rajapinnan 48 tunnin ikkuna ulottuu keskiyön yli, vaikka huomisen
+    // hintoja ei ole vielä julkaistu.
     const jaksot = [
       jakso("2026-11-20T10:00:00.000Z", "2026-11-20T11:00:00.000Z", 7),
       jakso("2026-11-21T10:00:00.000Z", "2026-11-21T11:00:00.000Z", 4),
     ];
+    expect(onkoHuomiselleHintoja(jaksot, nyt)).toBe(false);
+  });
+
+  it("on tosi, kun huomiselle on julkaistu koko vuorokausi", () => {
+    const jaksot = Array.from({ length: 24 }, (_, i) =>
+      jakso(
+        new Date(Date.UTC(2026, 10, 21, i)).toISOString(),
+        new Date(Date.UTC(2026, 10, 21, i + 1)).toISOString(),
+        4,
+      ),
+    );
     expect(onkoHuomiselleHintoja(jaksot, nyt)).toBe(true);
   });
 
@@ -149,5 +163,34 @@ describe("tilastot", () => {
 
   it("palauttaa null tyhjälle listalle", () => {
     expect(tilastot([])).toBeNull();
+  });
+});
+
+describe("onkoPaivaKattava", () => {
+  /** Luo annetun määrän peräkkäisiä tunnin jaksoja. */
+  function tunnit(maara: number): Hintajakso[] {
+    return Array.from({ length: maara }, (_, i) => {
+      const alku = new Date(Date.UTC(2026, 10, 20, i));
+      const loppu = new Date(Date.UTC(2026, 10, 20, i + 1));
+      return { alku, loppu, sntPerKwh: 5 };
+    });
+  }
+
+  it("on tosi täydelle vuorokaudelle", () => {
+    expect(onkoPaivaKattava(tunnit(24))).toBe(true);
+  });
+
+  it("on tosi kellonsiirtopäivän 23 tunnille", () => {
+    expect(onkoPaivaKattava(tunnit(23))).toBe(true);
+  });
+
+  it("on epätosi muutamalle jaksolle vuorokauden alusta", () => {
+    // Tämä on se tilanne, jossa rajapinnan 48 tunnin ikkuna ulottuu
+    // keskiyön yli, vaikka huomisen hintoja ei ole vielä julkaistu.
+    expect(onkoPaivaKattava(tunnit(1))).toBe(false);
+  });
+
+  it("on epätosi tyhjälle päivälle", () => {
+    expect(onkoPaivaKattava([])).toBe(false);
   });
 });
