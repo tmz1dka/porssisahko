@@ -16,10 +16,13 @@ Työ on tehty tietojenkäsittelytieteen projektikurssille (5 op).
 
 ## Tila
 
-Projekti on kehitysvaiheessa. Tämä versio on **vaiheen 2 projektipohja**:
-sovellus käynnistyy ja etusivu näkyy, mutta varsinaisia toimintoja
-(kirjautuminen, hintadata, laitteet, optimointi) ei ole vielä toteutettu.
-Toteutusjärjestys on kuvattu tiedostossa [docs/suunnitelma.md](docs/suunnitelma.md).
+Projekti on kehitysvaiheessa. Valmiina ovat käyttäjänhallinta
+(rekisteröityminen, kirjautuminen, roolit ja tilin poisto) sekä
+pörssisähkön hintojen haku ja hintasivu.
+
+Vielä puuttuvat laitteiden tallennus, halvimman käyttöajan laskenta ja
+ylläpitäjän käyttäjälista. Toteutusjärjestys on kuvattu tiedostossa
+[docs/suunnitelma.md](docs/suunnitelma.md).
 
 ## Teknologiat
 
@@ -33,7 +36,7 @@ Alla on lyhyt selitys jokaisesta välineestä ja siitä, miksi se on valittu.
 | **PostgreSQL + Prisma** | Tietokanta ja sen käsittelykirjasto. Prisma kuvaa tietokannan rakenteen yhdessä tiedostossa ja luo siitä tyypitetyt hakufunktiot. Otetaan käyttöön vaiheessa 4. |
 | **Auth.js** | Käyttäjänhallinta: rekisteröityminen, kirjautuminen ja roolit. |
 | **Zod** | Tarkistaa, että käyttäjän syöttämä tieto on oikeanlaista ennen tallennusta. |
-| **Recharts** | Piirtää hintakaaviot. |
+| **Recharts** | Piirtää hintakaaviot selaimessa. |
 | **Vitest** | Ajaa yksikkötestit eli pienet tarkistukset, jotka varmistavat yksittäisten funktioiden toimivan oikein. |
 | **ESLint** | Tarkastaja, joka huomauttaa koodista löytyvistä virheistä ja epäyhtenäisistä tavoista. |
 | **GitHub Actions + Vercel** | Automaattiset tarkistukset jokaiselle muutokselle ja sovelluksen julkaisu verkkoon. Otetaan käyttöön vaiheessa 3. |
@@ -175,6 +178,58 @@ säännössä on `onDelete: Cascade` – orpoja rivejä ei jää.
 Viimeistä ylläpitäjää ei voi poistaa. Muuten sovellukseen ei jäisi ketään,
 joka voi hallita käyttäjiä, eikä tilannetta saisi korjattua sovelluksen
 kautta lainkaan.
+
+## Hintadata
+
+Hinnat haetaan avoimesta rajapinnasta [porssisahko.net](https://porssisahko.net/api),
+joka julkaisee Suomen pörssisähkön hinnat. Hinnat ovat sentteinä
+kilowattitunnilta ja sisältävät arvonlisäveron. Ne eivät sisällä
+sähkönsiirtoa eivätkä sähköyhtiön marginaalia, joten oma lasku on suurempi –
+tämä kerrotaan myös hintasivulla, jottei luku johda käyttäjää harhaan.
+
+Rajapinnasta on kaksi versiota: `v2` antaa hinnat **15 minuutin** jaksoissa ja
+`v1` **tunnin** jaksoissa. Sovellus hakee ensin tarkemman ja siirtyy
+tuntihintoihin, jos se ei vastaa. Jakson pituutta ei oleteta missään
+vakioksi, vaan se lasketaan aina alku- ja loppuajasta.
+
+**Välimuisti** eli tallennettu kopio hinnoista: haettu vastaus säilytetään
+15 minuuttia, eikä sitä haeta uudelleen ennen sen vanhenemista. Hinnat
+julkaistaan kerran päivässä iltapäivällä, joten tiheämpi haku ei toisi uutta
+tietoa mutta kuormittaisi avointa rajapintaa turhaan.
+
+Koko hintojen haku on tiedostossa [src/lib/hintalahde.ts](src/lib/hintalahde.ts).
+Se on ainoa paikka, joka tuntee rajapinnan osoitteen ja vastauksen muodon:
+muu sovellus käsittelee vain omaa `Hintajakso`-tyyppiä. Siksi rajapinnan
+vaihtaminen esimerkiksi ENTSO-E:hen ei vaikuttaisi muualle.
+
+Rajapinnan vastaus tarkistetaan Zodilla. Ulkopuolinen palvelu voi muuttua tai
+palauttaa odottamatonta, ja silloin halutaan selkeä virheilmoitus eikä sekava
+kaatuminen keskellä sivua. Virhe palautetaan arvona eikä poikkeuksena, joten
+hintasivu näyttää ymmärrettävän viestin eikä kaadu.
+
+### Huomioidut reunatapaukset
+
+| Tilanne | Miten se käsitellään |
+|---|---|
+| Huomisen hintoja ei ole vielä julkaistu | Sivu kertoo sen selvästi ja käyttää tämän päivän hintoja |
+| Päivälle on vain muutama jakso | Päivää ei pidetä julkaistuna, eikä siitä näytetä tilastoja |
+| Hinta on negatiivinen | Käsitellään oikeana arvona; kaaviossa oma väri ja nollaviiva |
+| Rajapinta ei vastaa | Hintasivu näyttää virheilmoituksen, muu sovellus toimii |
+| Kelvoton päivämäärä vastauksessa | Jakso suodatetaan pois ennen laskentaa |
+
+Toiseksi viimeinen on tärkeä: rajapinta palauttaa aina viimeiset 48 tuntia,
+joten illalla mukaan tulee muutama seuraavan vuorokauden jakso, vaikka
+huomisen hintoja ei ole vielä julkaistu. Ilman tarkistusta sovellus laskisi
+"huomisen halvimman ajan" vuorokauden ensimmäisistä minuuteista ja antaisi
+väärän vastauksen. Siksi päivä katsotaan julkaistuksi vasta, kun hintoja on
+vähintään 20 tunnin ajalle. Raja on 20 eikä 24 tuntia, koska
+kellonsiirtopäivät ovat 23 ja 25 tuntia pitkiä.
+
+Kaikki aikalaskenta tehdään **Suomen aikavyöhykkeellä**, ei palvelimen
+aikavyöhykkeellä. Vercelin palvelin on UTC-ajassa, jolloin Suomen ilta
+näyttäisi kuuluvan edelliseen vuorokauteen. Säännöt ovat puhtaina
+funktioina tiedostossa [src/lib/hintajaksot.ts](src/lib/hintajaksot.ts),
+ja niille on yksikkötestit.
 
 ## Tietokanta
 
