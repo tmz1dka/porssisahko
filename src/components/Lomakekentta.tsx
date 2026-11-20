@@ -5,11 +5,18 @@
 type Props = {
   nimi: string;
   otsikko: string;
-  tyyppi: "email" | "password";
+  tyyppi: "email" | "password" | "text";
   ohje?: string;
   virhe?: string;
   oletusarvo?: string;
   automaattinenTaytto?: string;
+  /**
+   * Mikä näppäimistö puhelimessa avataan. "decimal" antaa numerot ja
+   * desimaalierottimen. Desimaaliluvut otetaan vastaan tekstikenttänä,
+   * koska numerokenttä ei hyväksy pilkkua kaikilla selaimilla – ja
+   * suomalainen käyttäjä kirjoittaa "1,5" eikä "1.5".
+   */
+  syotetila?: "decimal";
 };
 
 export function Lomakekentta({
@@ -20,6 +27,7 @@ export function Lomakekentta({
   virhe,
   oletusarvo,
   automaattinenTaytto,
+  syotetila,
 }: Props) {
   // Virheilmoitus liitetään kenttään aria-describedby-määreellä, jotta myös
   // ruudunlukija kertoo virheen oikean kentän kohdalla.
@@ -39,6 +47,7 @@ export function Lomakekentta({
         required
         defaultValue={oletusarvo}
         autoComplete={automaattinenTaytto}
+        inputMode={syotetila}
         aria-invalid={virhe ? true : undefined}
         aria-describedby={
           [virhe ? virheenTunnus : null, ohje ? ohjeenTunnus : null]
