@@ -18,10 +18,10 @@ Työ on tehty tietojenkäsittelytieteen projektikurssille (5 op).
 
 Projekti on kehitysvaiheessa. Valmiina ovat käyttäjänhallinta
 (rekisteröityminen, kirjautuminen, roolit ja tilin poisto) sekä
-pörssisähkön hintojen haku ja hintasivu.
+pörssisähkön hintojen haku ja hintasivu sekä laitteiden tallennus.
 
-Vielä puuttuvat laitteiden tallennus, halvimman käyttöajan laskenta ja
-ylläpitäjän käyttäjälista. Toteutusjärjestys on kuvattu tiedostossa
+Vielä puuttuvat halvimman käyttöajan laskenta ja ylläpitäjän
+käyttäjälista. Toteutusjärjestys on kuvattu tiedostossa
 [docs/suunnitelma.md](docs/suunnitelma.md).
 
 ## Teknologiat
@@ -230,6 +230,69 @@ aikavyöhykkeellä. Vercelin palvelin on UTC-ajassa, jolloin Suomen ilta
 näyttäisi kuuluvan edelliseen vuorokauteen. Säännöt ovat puhtaina
 funktioina tiedostossa [src/lib/hintajaksot.ts](src/lib/hintajaksot.ts),
 ja niille on yksikkötestit.
+
+## Laitteet
+
+Kirjautunut käyttäjä tallentaa laitteensa sivulla `/devices`: nimi, teho
+kilowatteina ja yhden käyttökerran kesto tunteina. Näistä lasketaan
+kulutus yhtä käyttökertaa kohden, esimerkiksi 2 kW × 2 h = 4 kWh.
+Vaiheessa 9 sama tieto yhdistetään hintoihin, jolloin laitteelle voidaan
+kertoa halvin käyttöaika.
+
+### Vain omat laitteet
+
+Tämä on sovelluksen tärkein tietosuojasääntö: kukaan ei näe toisen
+laitteita eikä voi muokata niitä.
+
+Sääntö on toteutettu niin, että **käyttäjän tunniste on osa jokaista
+kyselyä** eikä erillisenä tarkistuksena:
+
+```ts
+// Poisto onnistuu vain, jos laite kuuluu tälle käyttäjälle.
+prisma.device.deleteMany({ where: { id, userId } });
+```
+
+Muokkauksessa ja poistossa käytetään `updateMany`- ja `deleteMany`-kyselyitä
+eikä `update`- ja `delete`-kyselyitä. Syy on se, että jälkimmäiset
+hyväksyvät vain tunnisteen, jolloin omistaja pitäisi tarkistaa erikseen –
+ja se tarkistus voisi jäädä tekemättä. Kun ehto on kyselyssä itsessään,
+sitä ei voi unohtaa. Kyselyt palauttavat muutettujen rivien määrän, josta
+nähdään, löytyikö laite.
+
+Yhden laitteen sivu `/devices/[id]` vastaa **404** sekä olemattomalle
+laitteelle että toisen käyttäjän laitteelle. Vastaus on tarkoituksella
+sama: muuten osoitteita kokeilemalla voisi päätellä, mitkä tunnisteet ovat
+olemassa.
+
+Muokkaussivulla laitteen tunniste ei kulje lomakkeen piilokentässä, vaan se
+liitetään palvelintoimintoon `bind`-kutsulla. Piilokentän arvoa voi muokata
+selaimessa, `bind`-arvoa ei.
+
+Koko tietokantakäsittely on tiedostossa
+[src/lib/laitteet.ts](src/lib/laitteet.ts).
+
+### Syötteiden tarkistus
+
+Laitteen tiedot tarkistetaan samalla Zod-säännöllä kuin kirjautumistiedot,
+tiedostossa [src/lib/validointi.ts](src/lib/validointi.ts), ja säännölle on
+yksikkötestit.
+
+| Sääntö | Miksi |
+|---|---|
+| Nimi 1–60 merkkiä | Tyhjä nimi ei kerro mitään, pitkä rikkoo listan |
+| Teho yli 0 ja enintään 50 kW | 2000 on näppäilyvirhe: watit kilowattien sijaan |
+| Kesto yli 0 ja enintään 24 tuntia | Nollan tunnin käyttökerta ei tarkoita mitään |
+
+Desimaalit otetaan vastaan **pilkulla**: suomalainen käyttäjä kirjoittaa
+"1,5" eikä "1.5". Kentät ovat tekstikenttiä eivätkä numerokenttiä, koska
+numerokenttä ei hyväksy pilkkua kaikilla selaimilla.
+
+Jos tarkistus hylkää syötteen, **kentät säilyttävät käyttäjän kirjoittamat
+arvot**. Muuten yhdestä näppäilyvirheestä seuraisi, että koko lomake pitää
+täyttää uudelleen.
+
+Laitteen poisto kysyy vahvistuksen. Vahvistus on kevyempi kuin tilin
+poistossa, koska laitteen voi lisätä uudelleen.
 
 ## Tietokanta
 

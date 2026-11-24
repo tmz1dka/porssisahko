@@ -29,6 +29,10 @@ export async function Navigaatio() {
               Koontinäkymä
             </Link>
 
+            <Link href="/devices" className="text-sm hover:underline">
+              Laitteet
+            </Link>
+
             <Link href="/settings" className="text-sm hover:underline">
               Asetukset
             </Link>
